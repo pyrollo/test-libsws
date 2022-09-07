@@ -17,65 +17,108 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include <iostream>
-#include "sws.h"
+#include "swsengine.h"
 #include "test.h"
 
 void testModuleHierarchy()
 {
-    std::cout << "test module hierarchy" << std::endl;
+    TEST("Module hierarchy",
 
-    test("Create basic module at root level",
-        testNoException([] {
-            sws::newModule("myadd", "add");
-        })
+        swsEngine sws;
+
+        TESTNOEXCEPTION("Create basic module at root level",
+            sws.newModule("myadd", "add");
+        );
+
+        TESTEXCEPTION("Cannot create module at same level with same name",
+            sws::duplicate_name,
+            sws.newModule("myadd", "add");
+        );
+
+        TESTEXCEPTION("Cannot create module as basic module child",
+            sws::illegal_operation,
+            sws.newModule("myadd/myadd2", "add");
+        );
+
+        TESTNOEXCEPTION("Create container module at root level",
+            sws.newModule("container", "container");
+        );
+
+        TESTNOEXCEPTION("Create basic module in container",
+            sws.newModule("container/myadd", "add");
+        );
+
+        TESTEXCEPTION("Cannont create basic module in non existing container",
+            sws::unknown_module,
+            sws.newModule("containerZ/myadd", "add");
+        );
+
+        TESTNOEXCEPTION("Create container in container",
+            sws.newModule("container/container", "container");
+        );
+
+        TESTNOEXCEPTION("Create basic module in container in container",
+            sws.newModule("container/container/myadd", "add");
+        );
     );
+}
 
-    test("Cannot create module at same level with same name",
-        testException<sws::duplicate_name>([] {
-            sws::newModule("myadd", "add");
-        })
-    );
+void testModuleDeletion()
+{
+    TEST("Module deletion",
 
-    test("Cannot create module as basic module child",
-        testException<sws::illegal_operation>([] {
-            sws::newModule("myadd/myadd2", "add");
-        })
-    );
+        swsEngine sws;
 
-    test("Create container module at root level",
-        testNoException([] {
-            sws::newModule("container", "container");
-        })
-    );
+        TESTNOEXCEPTION("Create fixtures",
+            sws.newModule("myadd", "add");
+            sws.newModule("myemptycontainer", "container");
+            sws.newModule("myonelevelcontainer", "container");
+            sws.newModule("myonelevelcontainer/myadd", "add");
+            sws.newModule("myonelevelcontainer/myadd2", "add");
+            sws.newModule("myonelevelcontainer/myadd3", "add");
+            sws.newModule("mycontainer", "container");
+            sws.newModule("mycontainer/mycontainer2", "container");
+            sws.newModule("mycontainer/mycontainer2/myadd", "add");
+            sws.newModule("mycontainer/mycontainer2/myadd2", "add");
+            sws.newModule("mycontainer/mycontainer2/myadd3", "add");
+        );
 
-    test("Create basic module in container",
-        testNoException([] {
-            sws::newModule("container/myadd", "add");
-        })
-    );
+        TESTNOEXCEPTION("Delete an existing base module at root",
+            sws.deleteModule("myadd");
+        );
 
-    test("Cannont create basic module in non existing container",
-        testException<sws::unknown_module>([] {
-            sws::newModule("containerZ/myadd", "add");
-        })
-    );
+        TESTNOEXCEPTION("Delete an existing base module in container",
+            sws.deleteModule("mycontainer/mycontainer2/myadd");
+        );
 
-    test("Create container in container",
-        testNoException([] {
-            sws::newModule("container/container", "container");
-        })
-    );
+        TESTEXCEPTION("Cannot delete non existing module at root",
+            sws::unknown_module,
+            sws.deleteModule("nonexistant");
+        );
 
-    test("Create basic module in container in container",
-        testNoException([] {
-            sws::newModule("container/container/myadd", "add");
-        })
+        TESTEXCEPTION("Cannot delete non existing module in container",
+            sws::unknown_module,
+            sws.deleteModule("mycontainer/mycontainer2/nonexistant");
+        );
+
+        TESTNOEXCEPTION("Delete an empty container",
+            sws.deleteModule("myemptycontainer");
+        );
+
+        TESTNOEXCEPTION("Delete an one level container",
+            sws.deleteModule("myonelevelcontainer");
+        );
+
+        TESTNOEXCEPTION("Delete an several level container",
+            sws.deleteModule("mycontainer");
+        );
     );
 }
 
 int main()
 {
     testModuleHierarchy();
+    testModuleDeletion();
 
     return 0;
 }

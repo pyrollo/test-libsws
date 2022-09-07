@@ -20,47 +20,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using namespace std;
 
-bool testNoException(bool fct())
+void failtest(std::string title)
 {
-    try {
-        return fct();
-    } catch (std::exception e) {
-        cout << "Failed: Unexpected exception" << endl;
-        cout << "Message: " << e.what() << endl;
-        cout << "Type: " << typeid(e).name() << endl;
-        return false;
-    } catch (...) {
-        std::exception_ptr p = std::current_exception();
-        cout << "Failed: Unexpected exception" << endl;
-        if (p)
-            cout << "Type: " << p.__cxa_exception_type()->name() << std::endl;
-        return false;
-    };
+    cout << "[\033[31mFAILED \033[0m] \033[93m" << title << "\033[0m" << endl;
 }
 
-bool testNoException(void fct())
+void passtest(std::string title)
 {
-    try {
-        fct();
-        return true;
-    } catch (std::exception e) {
-        cout << "Failed: Unexpected exception" << endl;
-        cout << "Message: " << e.what() << endl;
-        cout << "Type: " << typeid(e).name() << endl;
-        return false;
-    } catch (...) {
-        std::exception_ptr p = std::current_exception();
-        cout << "Failed: Unexpected exception" << endl;
-        if (p)
-            cout << "Type: " << p.__cxa_exception_type()->name() << std::endl;
-        return false;
-    };
-}
-
-void test(std::string title, bool result)
-{
-    if (result)
-        cout << "[\033[32mSUCCESS\033[0m] \033[93m" << title << "\033[0m" << endl;
-    else
-        cout << "[\033[31mFAILED \033[0m] \033[93m" << title << "\033[0m" << endl;
+    cout << "[\033[32mSUCCESS\033[0m] \033[93m" << title << "\033[0m" << endl;
 }
