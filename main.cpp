@@ -36,7 +36,7 @@ void testModuleHierarchy()
         );
 
         TESTEXCEPTION("Cannot create module as basic module child",
-            sws::illegal_operation,
+            sws::unknown_schema,
             sws.newModule("myadd/myadd2", "add");
         );
 
@@ -49,7 +49,7 @@ void testModuleHierarchy()
         );
 
         TESTEXCEPTION("Cannont create basic module in non existing container",
-            sws::unknown_module,
+            sws::unknown_schema,
             sws.newModule("containerZ/myadd", "add");
         );
 
