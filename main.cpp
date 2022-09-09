@@ -114,11 +114,79 @@ void testModuleDeletion()
         );
     );
 }
+void testConnecting()
+{
+    TEST("Connecting",
+        swsEngine sws;
+
+        TESTNOEXCEPTION("Create fixtures",
+            sws.newModule("add1", "add");
+            sws.newModule("add2", "add");
+            sws.newModule("add3", "add");
+            sws.newModule("container", "container");
+            sws.newModule("container/add", "add");
+        );
+
+        TESTEXCEPTION("Cannot connect input to input",
+            sws::illegal_connection,
+            sws.connect("add1#op1", "add2#op1");
+        );
+
+        TESTEXCEPTION("Cannot connect output to output",
+            sws::illegal_connection,
+            sws.connect("add1#result", "add2#result");
+        );
+
+        TESTEXCEPTION("Cannot connect between different schemas",
+            sws::illegal_connection,
+            sws.connect("add1#result", "container/add#op1");
+        );
+
+        TESTEXCEPTION("Cannot connect interconnected module to itself",
+            sws::illegal_connection,
+            sws.connect("add1#result", "add1#op1");
+        );
+
+        TESTEXCEPTION("Cannot connect interconnected module to itself (reverse)",
+            sws::illegal_connection,
+            sws.connect("add1#op1", "add1#result");
+        );
+
+        TESTNOEXCEPTION("Can connect input to output",
+            sws.connect("add1#op1", "add2#result");
+        );
+
+        TESTNOEXCEPTION("Can connect output to input",
+            sws.connect("add3#result", "add2#op1");
+        );
+
+        TESTEXCEPTION("Cannot create circular connection",
+            sws::illegal_connection,
+            sws.connect("add3#op1", "add1#result");
+        );
+
+        TESTEXCEPTION("Cannot create circular connection (reverse)",
+            sws::illegal_connection,
+            sws.connect("add1#result", "add3#op1");
+        );
+
+        TESTEXCEPTION("Cannot connect same input twice",
+            sws::already_connected,
+            sws.connect("add1#op1", "add3#result");
+        );
+
+        TESTNOEXCEPTION("Can connect same output twice",
+            sws.connect("add1#op2", "add2#result");
+        );
+
+    );
+}
 
 int main()
 {
     testModuleHierarchy();
     testModuleDeletion();
+    testConnecting();
 
     return 0;
 }
