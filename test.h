@@ -24,10 +24,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using namespace std;
 
 #define CATCHEXCEPTIONS(TITLE)                                                 \
-    catch (std::exception e) {                                                 \
+    catch (const std::exception & e) {                                         \
         cout << "Failed: Unexpected exception" << endl;                        \
         cout << "Message: " << e.what() << endl;                               \
-        cout << "Type: " << typeid(e).name() << endl;                          \
+        cout << "TypeId: " << typeid(e).name() << endl;                        \
         failtest(TITLE);                                                       \
     } catch (...) {                                                            \
         std::exception_ptr p = std::current_exception();                       \
