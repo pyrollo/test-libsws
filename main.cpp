@@ -182,11 +182,45 @@ void testConnecting()
     );
 }
 
+void testBasicSchema()
+{
+    TEST("Basic schema",
+        swsEngine sws;
+
+        TESTNOEXCEPTION("Create fixtures",
+            sws.newModule("val1", "value");
+            sws.newModule("val2", "value");
+            sws.newModule("val3", "value");
+            sws.newModule("add1", "add");
+            sws.newModule("add2", "add");
+            sws.connect("val3#value",  "add2#op1");
+            sws.connect("add1#result", "add2#op2");
+            sws.connect("val1#value",  "add1#op1");
+            sws.connect("val2#value",  "add1#op2");
+        );
+
+        TESTTRUE("Step 1",
+            sws.set("val1#value", 1);
+            sws.set("val2#value", 2);
+            sws.set("val3#value", 3);
+            sws.step();
+            return sws.get("add2#result") == 6;
+        );
+
+        TESTTRUE("Step 2",
+            sws.set("val1#value", 5);
+            sws.step();
+            return sws.get("add2#result") == 10;
+        );
+    );
+}
+
 int main()
 {
     testModuleHierarchy();
     testModuleDeletion();
     testConnecting();
+    testBasicSchema();
 
     return 0;
 }
