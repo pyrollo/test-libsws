@@ -46,7 +46,6 @@ using namespace std;
     }                                                                          \
     CATCHEXCEPTIONS(TITLE);
 
-
 #define TESTEXCEPTION(TITLE, EXCEPTION, ...)                                   \
     try {                                                                      \
         TEST_TOTAL++;                                                          \
@@ -55,6 +54,21 @@ using namespace std;
     } catch (EXCEPTION) {                                                      \
         TEST_PASSED++;                                                         \
         passtest(TITLE);                                                       \
+    }                                                                          \
+    CATCHEXCEPTIONS(TITLE);
+
+#define TESTTRUE(TITLE, ...)                                                   \
+    try {                                                                      \
+        TEST_TOTAL++;                                                          \
+        auto fct = [&]() {                                                     \
+            __VA_ARGS__;                                                       \
+        };                                                                     \
+        if (!fct()) {                                                          \
+            failtest(TITLE);                                                   \
+        } else {                                                               \
+            TEST_PASSED++;                                                     \
+            passtest(TITLE);                                                   \
+        }                                                                      \
     }                                                                          \
     CATCHEXCEPTIONS(TITLE);
 
