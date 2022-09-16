@@ -182,9 +182,9 @@ void testConnecting()
     );
 }
 
-void testBasicSchema()
+void testBasicSchemaStep()
 {
-    TEST("Basic schema",
+    TEST("Basic schema step",
         swsEngine sws;
 
         TESTNOEXCEPTION("Create fixtures",
@@ -199,18 +199,88 @@ void testBasicSchema()
             sws.connect("val2#value",  "add1#op2");
         );
 
-        TESTTRUE("Step 1",
+        TESTEQUAL("Step 1", 6,
             sws.set("val1#value", 1);
             sws.set("val2#value", 2);
             sws.set("val3#value", 3);
             sws.step();
-            return sws.get("add2#result") == 6;
+            return sws.get("add2#result");
         );
 
-        TESTTRUE("Step 2",
+        TESTEQUAL("Step 2", 10,
             sws.set("val1#value", 5);
             sws.step();
-            return sws.get("add2#result") == 10;
+            return sws.get("add2#result");
+        );
+    );
+}
+
+
+void testNestedSchemaStep()
+{
+    TEST("Nested schema step",
+        swsEngine sws;
+
+        TESTNOEXCEPTION("Create fixtures",
+
+            // Custom1: 3 input add
+            sws.newModule("custom1", "container");
+
+            sws.newModule("custom1/add1", "add");
+            sws.newModule("custom1/add2", "add");
+
+            sws.newModule("custom1/op1", "input");
+            sws.newModule("custom1/op2", "input");
+            sws.newModule("custom1/op3", "input");
+            sws.newModule("custom1/result", "output");
+
+            sws.connect("custom1/op1#value", "custom1/add1#op1");
+            sws.connect("custom1/op2#value", "custom1/add1#op2");
+            sws.connect("custom1/op3#value", "custom1/add2#op1");
+            sws.connect("custom1/add1#result", "custom1/add2#op2");
+            sws.connect("custom1/add2#result", "custom1/result#value");
+
+            // Custom2: Doubler
+            sws.newModule("custom2", "container");
+
+            sws.newModule("custom2/mult", "multiply");
+            sws.newModule("custom2/value", "value");
+            sws.set("custom2/value#value", 2);
+
+            sws.newModule("custom2/op", "input");
+            sws.newModule("custom2/result", "output");
+
+            sws.connect("custom2/mult#op1",  "custom2/op#value");
+            sws.connect("custom2/mult#op2",  "custom2/value#value");
+            sws.connect("custom2/mult#result",  "custom2/result#value");
+
+            // Main schema
+            sws.newModule("in1", "input");
+            sws.newModule("in2", "input");
+            sws.newModule("in3", "input");
+            sws.newModule("out", "output");
+
+            sws.connect("in1#value", "custom1#op1");
+            sws.connect("in2#value", "custom1#op2");
+            sws.connect("in3#value", "custom1#op3");
+            sws.connect("custom1#result", "custom2#op");
+            sws.connect("custom2#result", "out#value");
+        );
+
+        TESTEQUAL("Step 1", 12,
+            sws.set("in1#value", 1);
+            sws.set("in2#value", 2);
+            sws.set("in3#value", 3);
+
+            sws.step();
+            return sws.get("out#value");
+        );
+
+        TESTEQUAL("Step 2", 16,
+            sws.set("in3#value", 5);
+
+            sws.step();
+            return sws.get("out#value");
         );
     );
 }
@@ -220,7 +290,8 @@ int main()
     testModuleHierarchy();
     testModuleDeletion();
     testConnecting();
-    testBasicSchema();
+    testBasicSchemaStep();
+    testNestedSchemaStep();
 
     return 0;
 }
