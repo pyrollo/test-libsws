@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #define TEST_H
 
 #include <string>
+#include <sstream>
 
 using namespace std;
 
@@ -71,6 +72,26 @@ using namespace std;
         }                                                                      \
     }                                                                          \
     CATCHEXCEPTIONS(TITLE);
+
+#define TESTEQUAL(TITLE, VALUE, ...)                                           \
+    try {                                                                      \
+        TEST_TOTAL++;                                                          \
+        auto fct = [&]() {                                                     \
+            __VA_ARGS__;                                                       \
+        };                                                                     \
+        auto result = fct();                                                   \
+        if (result == VALUE) {                                                 \
+            TEST_PASSED++;                                                     \
+            passtest(TITLE);                                                   \
+        } else {                                                               \
+            std::ostringstream stream;                                         \
+            stream << TITLE;                                                   \
+            stream << " (expected " << VALUE << " got " << result << ")";      \
+            failtest(stream.str());                                            \
+        }                                                                      \
+    }                                                                          \
+    CATCHEXCEPTIONS(TITLE);
+
 
 #define TEST(TITLE, ...) \
     { \
