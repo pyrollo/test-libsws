@@ -179,6 +179,31 @@ void testConnecting()
             sws.connect("add1#op2", "add2#result");
         );
 
+        TESTNOEXCEPTION("Can disconnect",
+            sws.disconnect("add1#op2", "add2#result");
+            sws.disconnect("add2#op1", "add3#result");
+        );
+
+        TESTNOEXCEPTION("Can reconnect",
+            sws.connect("add1#op2", "add2#result");
+            sws.connect("add2#op1", "add3#result");
+        );
+
+        TESTNOEXCEPTION("Can disconnect (reverse)",
+            sws.disconnect("add2#result", "add1#op2");
+            sws.disconnect("add3#result", "add2#op1");
+        );
+
+        TESTNOEXCEPTION("Can reconnect (reverse)",
+            sws.connect("add2#result", "add1#op2");
+            sws.connect("add3#result", "add2#op1");
+        );
+
+        TESTEXCEPTION("Still cant connect same input twice",
+            sws::already_connected,
+            sws.connect("add1#op1", "add3#result");
+        );
+
     );
 }
 
