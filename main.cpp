@@ -114,6 +114,7 @@ void testModuleDeletion()
         );
     );
 }
+
 void testConnecting()
 {
     TEST("Connecting",
@@ -204,6 +205,38 @@ void testConnecting()
             sws.connect("add1#op1", "add3#result");
         );
 
+    );
+}
+
+void testListConnectable()
+{
+    typedef std::unordered_set<std::string> PathList;
+    TEST("List connectable",
+        swsEngine sws;
+
+        TESTNOEXCEPTION("Create fixtures",
+            sws.newModule("add1", "add");
+            sws.newModule("add2", "add");
+            sws.newModule("add3", "add");
+        );
+
+        TESTTRUE("Without connections - input",
+            PathList list = sws.listConnectable("add1#op1");
+            PathList expected;
+            expected.insert("add2#result");
+            expected.insert("add3#result");
+            return list == expected;
+        );
+
+        TESTTRUE("Without connections - output",
+            PathList list = sws.listConnectable("add1#result");
+            PathList expected;
+            expected.insert("add2#op1");
+            expected.insert("add2#op2");
+            expected.insert("add3#op1");
+            expected.insert("add3#op2");
+            return list == expected;
+        );
     );
 }
 
@@ -315,6 +348,7 @@ int main()
     testModuleHierarchy();
     testModuleDeletion();
     testConnecting();
+    testListConnectable();
     testBasicSchemaStep();
     testNestedSchemaStep();
 
