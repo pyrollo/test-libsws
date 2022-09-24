@@ -208,8 +208,31 @@ void testConnecting()
     );
 }
 
+template<typename T>
+bool compareUnorderedSet(std::unordered_set<T> expected, std::unordered_set<T> got)
+{
+  if (expected == got)
+      return true;
+
+  printf("\tExpected:\n\t\t");
+  for (auto it: expected) { printf("%s, ", it.c_str()); }
+  printf("\n");
+  printf("\tGot:\n\t\t");
+  for (auto it: got) { printf("%s, ", it.c_str()); }
+  printf("\n");
+
+  return false;
+}
+
 void testListConnectable()
 {
+    // +--------+     +--------+     +--------+
+    // |  add1  |     |  add2  |     |  add3  |
+    // >op1     |  +-->op1     |     >op1     |
+    // |  result<--+  |  result<     |  result<
+    // >op2     |     >op2     |     >op2     |
+    // +--------+     +--------+     +--------+
+
     typedef std::unordered_set<std::string> PathList;
     TEST("List connectable",
         swsEngine sws;
@@ -221,21 +244,54 @@ void testListConnectable()
         );
 
         TESTTRUE("Without connections - input",
-            PathList list = sws.listConnectable("add1#op1");
+            PathList got = sws.listConnectable("add1#op1");
             PathList expected;
             expected.insert("add2#result");
             expected.insert("add3#result");
-            return list == expected;
+            return compareUnorderedSet(expected, got);
         );
 
         TESTTRUE("Without connections - output",
-            PathList list = sws.listConnectable("add1#result");
+            PathList got = sws.listConnectable("add1#result");
             PathList expected;
             expected.insert("add2#op1");
             expected.insert("add2#op2");
             expected.insert("add3#op1");
             expected.insert("add3#op2");
-            return list == expected;
+            return compareUnorderedSet(expected, got);
+        );
+
+        TESTNOEXCEPTION("Create connections",
+            sws.connect("add1#result", "add2#op1");
+        );
+
+        TESTTRUE("With connections - connected input (add2#op1)",
+            PathList got = sws.listConnectable("add2#op1");
+            PathList expected;
+            return compareUnorderedSet(expected, got);
+        );
+
+        TESTTRUE("With connections - other input (add2#op2)",
+            PathList got = sws.listConnectable("add2#op2");
+            PathList expected;
+            expected.insert("add1#result");
+            expected.insert("add3#result");
+            return compareUnorderedSet(expected, got);
+        );
+
+        TESTTRUE("With connections - upstream input (add1#op1)",
+            PathList got = sws.listConnectable("add1#op1");
+            PathList expected;
+            expected.insert("add3#result");
+            return compareUnorderedSet(expected, got);
+        );
+
+        TESTTRUE("With connections - downstream output (add2#result)",
+            PathList got = sws.listConnectable("add2#result");
+            PathList expected;
+            expected.insert("add3#op1");
+            expected.insert("add3#op2");
+            return compareUnorderedSet(expected, got);
         );
     );
 }
