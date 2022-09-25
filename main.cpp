@@ -399,6 +399,61 @@ void testNestedSchemaStep()
     );
 }
 
+void testInstanciateModule()
+{
+    TEST("Instanciate module",
+        swsEngine sws;
+
+        TESTNOEXCEPTION("Create fixtures",
+            sws.newModule("simple", "add");
+
+            sws.newModule("complex1",        "container");
+            sws.newModule("complex1/op",     "input");
+            sws.newModule("complex1/result", "output");
+            sws.newModule("complex1/value",  "value");
+            sws.newModule("complex1/add",    "add");
+
+            sws.set("complex1/value#value", 1);
+
+            sws.connect("complex1/op#value",     "complex1/add#op1");
+            sws.connect("complex1/value#value",  "complex1/add#op2");
+            sws.connect("complex1/result#value", "complex1/add#result");
+        );
+
+        TESTNOEXCEPTION("Instantiate simple module",
+            sws.instantiateModule("simple2", "simple");
+        );
+
+        TESTNOEXCEPTION("Instantiate complex module",
+            sws.instantiateModule("complex2", "complex1");
+        );
+
+        TESTEXCEPTION("Can't instantiate complex module in itself",
+            sws::illegal_operation,
+            sws.instantiateModule("complex1/complex3", "complex1");
+        );
+
+        TESTNOEXCEPTION("Can instantiate complex module in another one",
+            sws.instantiateModule("complex2/complex3", "complex1");
+        );
+
+        TESTNOEXCEPTION("Can connect instanciated module",
+            sws.connect("complex1#result", "complex2#op");
+        );
+
+        TESTEXCEPTION("Can't make connect loop with instanciated modules",
+            sws::illegal_connection,
+            sws.connect("complex1#op", "complex2#result");
+        );
+
+        TESTEQUAL("Step test of instanciated module", 7,
+            sws.set("complex1#op", 5);
+            sws.step();
+            return sws.get("complex2#result");
+        );
+    );
+}
+
 int main()
 {
     testModuleHierarchy();
@@ -407,6 +462,7 @@ int main()
     testListConnectable();
     testBasicSchemaStep();
     testNestedSchemaStep();
+    testInstanciateModule();
 
     return 0;
 }
