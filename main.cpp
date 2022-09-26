@@ -224,6 +224,33 @@ bool compareUnorderedSet(std::unordered_set<T> expected, std::unordered_set<T> g
   return false;
 }
 
+void testIntrospection()
+{
+    typedef std::unordered_set<std::string> PathList;
+
+    TEST("List introspection",
+        swsEngine sws;
+
+        TESTNOEXCEPTION("Create fixtures",
+            sws.newModule("add1", "add");
+        );
+
+        TESTTRUE("List plugs",
+            PathList got = sws.listPlugs("add1");
+            PathList expected;
+            expected.insert("add1#op1");
+            expected.insert("add1#op2");
+            expected.insert("add1#result");
+            return compareUnorderedSet(expected, got);
+        );
+
+        TESTEQUAL("Module type", "add", return sws.getModuleType("add1"););
+        TESTEQUAL("Plug type output", "output", return sws.getPlugType("add1#result"););
+        TESTEQUAL("Plug type intput", "input", return sws.getPlugType("add1#op2"););
+    );
+
+}
+
 void testListConnectable()
 {
     // +--------+     +--------+     +--------+
@@ -459,6 +486,7 @@ int main()
     testModuleHierarchy();
     testModuleDeletion();
     testConnecting();
+    testIntrospection();
     testListConnectable();
     testBasicSchemaStep();
     testNestedSchemaStep();
